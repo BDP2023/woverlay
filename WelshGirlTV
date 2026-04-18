@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center; 
+    padding: 30px;
+    position: relative;
+  }
+
+  /* Fixed width to match "WELSH GIRL" perfectly */
+  .container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    justify-content: flex-start;
+    text-align: center;
+    width: 320px; 
+    gap: 8px; 
+  }
+
+  .matrix {
+    position: absolute;
+    top: 10px; 
+    bottom: -200px; 
+    left: 0;
+    right: 0;
+    width: 100%;
+    pointer-events: none;
+    z-index: 1;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  }
+
+  .col {
+    position: absolute;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    animation: rain 14s linear infinite;
+  }
+
+  .char {
+    font-family: monospace;
+    font-size: 11px;
+    line-height: 11px;
+    color: rgba(180, 120, 255, 0.4);
+    opacity: 0;
+    animation: charAppear 1.2s forwards;
+  }
+
+  @keyframes charAppear {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes rain {
+    0% { transform: translateY(-30px); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(400px); opacity: 0; }
+  }
+
+  .icons {
+    position: relative;
+    z-index: 2; 
+    display: flex;
+    gap: 12px;
+  }
+
+  .icon {
+    width: 26px;
+    height: 26px;
+    transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .icon.idle {
+    opacity: 0.3;
+    filter: brightness(0) saturate(100%) invert(79%) sepia(17%) saturate(1119%) hue-rotate(227deg);
+    transform: scale(0.85);
+  }
+
+  .icon.active {
+    opacity: 1;
+    filter: brightness(0) saturate(100%) invert(100%);
+    transform: scale(1.15);
+  }
+
+  .name {
+    position: relative;
+    z-index: 3; 
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #ffffff;
+    text-shadow: 2px 2px 0px rgba(140, 80, 255, 0.9);
+    white-space: pre;
+    margin: 0;
+  }
+
+  .letter {
+    display: inline-block;
+    transition: transform 3s ease-in-out; 
+    will-change: transform;
+  }
+
+  @keyframes glitch {
+    0% { transform: translate(0); text-shadow: 2px 2px 0px rgba(140,80,255,0.8); }
+    15% { transform: translate(-4px, 2px); text-shadow: -2px -2px 0px #ff00ff, 2px 2px 0px #00ffff; }
+    30% { transform: translate(4px, -2px); text-shadow: 2px -2px 0px #00ffff, -2px 2px 0px #ff00ff; }
+    45% { transform: translate(0); }
+  }
+
+  .glitch-hit {
+    animation: glitch 0.3s cubic-bezier(.25,.46,.45,.94) both !important;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="container">
+    <div class="name" id="title"></div>
+    <div class="icons">
+      <img id="twitch" class="icon idle" src="https://cdn.simpleicons.org/twitch/ffffff" alt="Twitch" />
+      <img id="youtube" class="icon idle" src="https://cdn.simpleicons.org/youtube/ffffff" alt="YouTube" />
+      <img id="instagram" class="icon idle" src="https://cdn.simpleicons.org/instagram/ffffff" alt="Instagram" />
+    </div>
+    <div class="matrix" id="matrix"></div>
+  </div>
+</div>
+
+<script>
+const titleText = 'WELSH GIRL'; // Text Updated
+const titleEl = document.getElementById('title');
+const matrix = document.getElementById('matrix');
+const chars = 'アイウエオカキクケコサシスセソ0123456789';
+
+[...titleText].forEach((c, i) => {
+  const s = document.createElement('span');
+  s.className = 'letter';
+  s.textContent = c === ' ' ? '\u00A0' : c;
+  titleEl.appendChild(s);
+
+  function drift() {
+    const x = (Math.random() - 0.5) * 6;
+    const y = (Math.random() - 0.5) * 8;
+    const r = (Math.random() - 0.5) * 3;
+    s.style.transform = `translate(${x}px, ${y}px) rotate(${r}deg)`;
+    setTimeout(drift, 2000 + Math.random() * 3000);
+  }
+  drift();
+});
+
+function createColumn(x) {
+  const col = document.createElement('div');
+  col.className = 'col';
+  col.style.left = x + 'px';
+  const duration = 12 + Math.random() * 6;
+  col.style.animationDuration = duration + 's';
+  col.style.animationDelay = (-Math.random() * 20) + 's';
+  const maxLength = 8 + Math.floor(Math.random() * 6);
+
+  function spawnChar(count) {
+    if (count >= maxLength) return;
+    const span = document.createElement('span');
+    span.className = 'char';
+    span.textContent = chars[Math.floor(Math.random() * chars.length)];
+    
+    setInterval(() => {
+      span.textContent = chars[Math.floor(Math.random() * chars.length)];
+    }, 600 + Math.random() * 600);
+
+    col.appendChild(span);
+    setTimeout(() => spawnChar(count + 1), 650);
+  }
+  spawnChar(0);
+  matrix.appendChild(col);
+}
+
+// Adjusted to fit the 320px width of "WELSH GIRL"
+for (let i = 0; i < 15; i++) { createColumn(i * 21); }
+
+const icons = [
+  document.getElementById('twitch'),
+  document.getElementById('youtube'),
+  document.getElementById('instagram')
+];
+let index = 0;
+
+function rotate() {
+  icons.forEach((icon, i) => {
+    icon.className = (i === index) ? 'icon active' : 'icon idle';
+  });
+  index = (index + 1) % icons.length;
+}
+rotate();
+setInterval(rotate, 12000);
+
+function triggerGlitch() {
+  titleEl.classList.add('glitch-hit');
+  setTimeout(() => titleEl.classList.remove('glitch-hit'), 300);
+  setTimeout(triggerGlitch, Math.random() * 12000 + 8000);
+}
+setTimeout(triggerGlitch, 4000);
+</script>
+</body>
+</html>
